@@ -1,0 +1,35 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cart {
+  id        String       @id @default(uuid())
+  userId    String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  status    CartStatus   @default(OPEN)
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    String
+  productId String
+  count     Int
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+enum CartStatus {
+  OPEN
+  ORDERED
+}
