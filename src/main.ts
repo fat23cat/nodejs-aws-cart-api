@@ -1,21 +1,25 @@
 import { NestFactory } from '@nestjs/core';
-
-import helmet from 'helmet';
-
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-
-const port = process.env.PORT || 4000;
+import * as express from 'express';
+import * as serverless from 'serverless-http';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  app.enableCors({
-    origin: (req, callback) => callback(null, true),
-  });
-  app.use(helmet());
-
-  await app.listen(port);
+  const expressApp = express();
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressApp),
+  );
+  app.enableCors();
+  await app.init();
+  return serverless(expressApp);
 }
-bootstrap().then(() => {
-  console.log('App is running on %s port', port);
-});
+
+let server: serverless.Handler;
+
+export const handler = async (event: any, context: any) => {
+  if (!server) {
+    server = await bootstrap();
+  }
+  return server(event, context);
+};

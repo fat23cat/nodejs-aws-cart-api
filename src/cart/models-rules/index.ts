@@ -1,11 +1,17 @@
-import { Cart, CartItem } from '../models';
+import { CartDto, CartItem } from '../models';
+import { instanceToPlain } from 'class-transformer';
 
 /**
  * @param {Cart} cart
  * @returns {number}
  */
-export function calculateCartTotal(cart: Cart): number {
-  return cart ? cart.items.reduce((acc: number, { product: { price }, count }: CartItem) => {
-    return acc += price * count;
-  }, 0) : 0;
+export function calculateCartTotal(cart: CartDto): number {
+  return cart
+    ? instanceToPlain(cart)?.items?.reduce(
+        (acc: number, { count }: CartItem) => {
+          return acc + count;
+        },
+        0,
+      ) || 0
+    : 0;
 }
